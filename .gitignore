@@ -1,0 +1,30 @@
+# Build output
+dist/
+build/
+lib/
+
+# TypeScript
+*.tsbuildinfo
+
+# Dependencies
+node_modules/
+
+# Local pwvm state (never commit)
+.pwvm/
+
+# Local scripts (developer-only)
+scripts/*.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Logs
+logs/
+*.log
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/

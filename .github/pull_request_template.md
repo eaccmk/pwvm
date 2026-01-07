@@ -1,0 +1,5 @@
+- [ ] Code builds successfully (`npm run build`)
+- [ ] Unit tests pass (`npm test`)
+- [ ] Integration tests verified locally (if applicable)
+- [ ] No unintended behavior changes
+- [ ] Documentation updated if needed
