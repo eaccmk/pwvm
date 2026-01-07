@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/eaccmk/pwvm"
+    "url": "git+https://github.com/eaccmk/pwvm.git"
   },
   "dependencies": {
     "commander": "^14.0.2",
