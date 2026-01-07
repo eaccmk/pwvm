@@ -28,4 +28,4 @@ jobs:
         run: npm run build
 
       - name: Show help options
-        run: node dist/index.js --help      
+        run: node dist/index.js --help
