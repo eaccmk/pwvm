@@ -70,8 +70,8 @@ Install → setup → select version → run Playwright.
 
 If this tool saves you time, CI hours, or debugging frustration:
 
-* ⭐ Star the project
-* ❤️ Sponsor the work
+* ⭐ [Star the project](https://github.com/eaccmk/pwvm)
+* ❤️ [Sponsor via GitHub](https://github.com/sponsors/eaccmk)
 * 🔁 Share it with your team
 
 Your support helps keep pwvm maintained and improving.

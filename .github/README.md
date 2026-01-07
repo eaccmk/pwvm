@@ -8,7 +8,7 @@ An open-source **Playwright Version Manager (pwvm)**.
 
 ---
 
-## What pwvm is
+## What pwvm is ?
 
 `pwvm` or **Playwright Version Manager** lets you *install, manage, and switch between multiple Playwright versions* with a single command — similar to how `nvm` works for Node.js.
 
@@ -24,7 +24,7 @@ Playwright evolves quickly, which is great — but upgrades and breaking changes
 
 ---
 
-## Support pwvm
+## Support `pwvm`
 
 `pwvm` is built and maintained independently to solve a problem many of us face but rarely have time to fix properly.
 
@@ -196,11 +196,9 @@ Create `.pwvmrc` in your project root:
 
 When present:
 
-`.pwvmrc` overrides the global version
-
-No need to run `pwvm use` inside that project
-
-Ideal for CI, monorepos, and shared repositories
+- `.pwvmrc` overrides the global version
+- No need to run `pwvm use` inside that project
+- Ideal for CI, monorepos, and shared repositories
 
 ### Usage in CI pipelines
 
@@ -214,15 +212,10 @@ Ideal for CI, monorepos, and shared repositories
 ### General CI pattern
 
 - Install `pwvm`
-
 - Run `pwvm setup`
-
 - Add `~/.pwvm/shims` to `PATH`
-
 - Install and select Playwright
-
 - Run Playwright commands
-
 
 ## Pipleine examples (`yaml`)
 
