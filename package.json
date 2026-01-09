@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "pwvm",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Playwright Version Manager",
   "license": "MIT",
   "type": "module",
