@@ -43,24 +43,29 @@ Follow the printed instructions to add pwvm shims to your `PATH`.
 ## Common usage
 
 ```sh
-pwvm install 1.53.0
-pwvm use 1.53.0
+pwvm install 1.57.0
+pwvm use 1.57.0
+playwright --version
 playwright test
 ```
 
 Pin versions per project with `.pwvmrc`:
 
 ```text
-1.53.0
+1.57.0
 ```
 
 ---
 
-## CI-friendly
+### CI-friendly
 
 `pwvm` works in GitHub Actions, Azure Pipelines, Bitbucket, and any CI where you control `PATH`.
 
 Install → setup → select version → run Playwright.
+
+### Dockerized
+
+`pwvm` works seamlessly in Docker containers or local development.
 
 ---
 
@@ -72,7 +77,7 @@ If this tool saves you time, CI hours, or debugging frustration:
 
 * ⭐ [Star the project](https://github.com/eaccmk/pwvm)
 * ❤️ [Sponsor via GitHub](https://github.com/sponsors/eaccmk)
-* 🔁 Share it with your team
+* 🔁 Share it with your team and tag #QualityWithMillan
 
 Your support helps keep pwvm maintained and improving.
 
