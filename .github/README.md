@@ -191,7 +191,7 @@ You can pin a Playwright version per project using a `.pwvmrc` file.
 Create `.pwvmrc` in your project root:
 
 ```text
-1.42.0
+1.57.0
 ```
 
 When present:
@@ -199,6 +199,59 @@ When present:
 - `.pwvmrc` overrides the global version
 - No need to run `pwvm use` inside that project
 - Ideal for CI, monorepos, and shared repositories
+
+## Running pwvm in Docker
+
+You can use `pwvm` in Docker to manage and test multiple Playwright versions.
+
+#### Example Dockerfile
+
+```Dockerfile
+FROM node:20-slim
+
+# Install pwvm globally
+RUN npm install -g pwvm
+
+# Root default
+ENV PATH="/root/.pwvm/shims:${PATH}"
+
+WORKDIR /app
+COPY . .
+
+# Uncomment to install multiple Playwright versions using RUN commands
+RUN pwvm install 1.57.0 --no-browsers
+# RUN pwvm install 1.40.0
+# RUN pwvm install latest
+
+CMD ["sh"]
+```
+
+#### Build and run
+
+```sh
+# Build the Docker image
+docker build -t pwvm .
+
+# Run tests with a specific version
+docker pwvm use 1.57.0
+```
+
+#### Verify installed versions
+
+```sh
+# List all installed versions
+docker run pwvm list
+```
+
+#### docker interactive mode (shell)
+```sh
+docker run -it pwvm
+```
+
+Then use commands like you would run on your local
+
+![commands in a Docker shell - interactive session ](../wiki/switching_playwright_vesions.gif)
+
 
 ### Usage in CI pipelines
 
@@ -214,7 +267,7 @@ When present:
 - Install `pwvm`
 - Run `pwvm setup`
 - Add `~/.pwvm/shims` to `PATH`
-- Install and select Playwright
+- Install and select a specific Playwright version
 - Run Playwright commands
 
 ## Pipleine examples (`yaml`)
@@ -229,8 +282,8 @@ When present:
 - run: npm install -g pwvm
 - run: pwvm setup
 - run: echo "$HOME/.pwvm/shims" >> $GITHUB_PATH
-- run: pwvm install 1.42.0
-- run: pwvm use 1.42.0
+- run: pwvm install 1.57.0
+- run: pwvm use 1.57.0
 - run: playwright test
 ```
 
@@ -246,8 +299,8 @@ When present:
 - script: pwvm setup
 - script: |
     export PATH="$HOME/.pwvm/shims:$PATH"
-    pwvm install 1.42.0
-    pwvm use 1.42.0
+    pwvm install 1.57.0
+    pwvm use 1.57.0
     playwright test
 ```
 
@@ -259,8 +312,8 @@ script:
   - npm install -g pwvm
   - pwvm setup
   - export PATH="$HOME/.pwvm/shims:$PATH"
-  - pwvm install 1.42.0
-  - pwvm use 1.42.0
+  - pwvm install 1.57.0
+  - pwvm use 1.57.0
   - playwright test
 ```
 

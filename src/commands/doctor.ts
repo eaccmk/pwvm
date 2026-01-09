@@ -34,7 +34,9 @@ export const runDoctorCommand = async (
   const fsImpl = deps.fs ?? fs;
   const pwvmDir = getPwvmDir();
   const shimsDir = deps.shimsDir ?? getShimsDir();
-  const envPath = deps.envPath ?? process.env.PATH ?? "";
+  // const envPath = deps.envPath ?? process.env.PATH ?? "";
+  const envPath = deps.envPath ?? process.env.PATH ?? process.env.DOCKER_PATH ?? "";
+  // const dockerPath = process.env.DOCKER_PATH ?? "";
 
   const shimPath = path.join(shimsDir, "playwright");
 
