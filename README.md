@@ -1,5 +1,7 @@
 # pwvm
 
+![CI](https://github.com/eaccmk/pwvm/actions/workflows/ci.yml/badge.svg)
+
 ### **Playwright Version Manager**
 
 A simple *Playwright Version Manager* that solves a common pain point:
@@ -49,11 +51,22 @@ playwright --version
 playwright test
 ```
 
+![pwvm commmands demo](./wiki/switching_playwright_vesions.gif)
+
 Pin versions per project with `.pwvmrc`:
 
 ```text
 1.57.0
 ```
+
+### Deterministic guarantees pwvm already provides
+•	Playwright installed by exact version (`playwright@x.y.z`)
+•	Versions stored in isolated directories (`~/.pwvm/versions/<version>`)
+•	Browser binaries scoped per Playwright version
+•	`.pwvmrc` pins version per repo
+•	No implicit upgrades (no latest unless explicitly requested)
+
+> [!NOTE] pwvm performs no background network activity and only installs software when explicitly requested.
 
 ---
 

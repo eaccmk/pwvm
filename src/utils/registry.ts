@@ -9,6 +9,8 @@ export type RegistryMetadata = {
 
 const REGISTRY_URL = "https://registry.npmjs.org";
 
+// NOTE: This function MUST only be called from user-invoked commands
+// such as `list-remote` or `install latest`. No background usage allowed.
 export const fetchPackageMetadata = async (
   packageName: string,
 ): Promise<RegistryMetadata> =>

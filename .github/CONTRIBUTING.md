@@ -25,7 +25,7 @@ If you see editor or type errors:
 
 ## Forking and setup
 
-1. Fork the repository
+1. [Fork](https://github.com/eaccmk/pwvm/fork) the repository
 2. Clone your fork
 3. Install dependencies:
 
@@ -51,7 +51,7 @@ node dist/index.js <command>
 ```
 
 ### Integration (e2e) tests
-ntegration tests live under `itest/` and are skipped by default.
+Integration tests live under `itest/`
 
 To run them locally:
 ```sh

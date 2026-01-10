@@ -1,5 +1,7 @@
 # pwvm
 
+![CI](https://github.com/eaccmk/pwvm/actions/workflows/ci.yml/badge.svg)
+
 ## **Playwright Version Manager**
 
 📦 npm package: https://www.npmjs.com/package/pwvm
@@ -24,7 +26,7 @@ Playwright evolves quickly, which is great — but upgrades and breaking changes
 
 ---
 
-## Support `pwvm`
+## Support pwvm
 
 `pwvm` is built and maintained independently to solve a problem many of us face but rarely have time to fix properly.
 
@@ -178,7 +180,7 @@ After setup, use Playwright normally:
 
 ```sh
 # VYou can verify the actual Playwright version in use currently
-playwright --version #or playwright -V
+playwright --version # or playwright -V
 
 # Run test as usual (can be your own commands with multiple params)
 playwright test
@@ -252,6 +254,7 @@ Then use commands like you would run on your local
 
 ![commands in a Docker shell - interactive session ](../wiki/switching_playwright_vesions.gif)
 
+> [!NOTE] pwvm performs no background network activity and only installs software when explicitly requested.
 
 ### Usage in CI pipelines
 
