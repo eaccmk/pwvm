@@ -8,6 +8,8 @@
 
 An open-source **Playwright Version Manager (pwvm)**.
 
+![pwvm icon ](../wiki/pwvm_icon_.png)
+
 ---
 
 ## What pwvm is ?

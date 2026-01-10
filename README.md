@@ -10,6 +10,8 @@ A simple *Playwright Version Manager* that solves a common pain point:
 
 `pwvm` lets you install, manage, and switch Playwright versions reliably — **one command, predictable behavior**, just like `nvm` for Node.js.
 
+![pwvm icon ](./wiki/pwvm_icon_white.png)
+
 ---
 
 ## Why pwvm
