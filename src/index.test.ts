@@ -58,8 +58,8 @@ describe("setup reminder", () => {
     process.env.PATH = "/usr/bin";
     process.argv = ["node", "pwvm", "list"];
 
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    vi.spyOn(console, "log").mockImplementation(() => { });
 
     let resolveList: (() => void) | null = null;
     const listDone = new Promise<void>((resolve) => {
@@ -109,7 +109,7 @@ describe("setup reminder", () => {
     process.env.PATH = "/usr/bin";
     process.argv = ["node", "pwvm", "list"];
 
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
 
     let resolveList: (() => void) | null = null;
     const listDone = new Promise<void>((resolve) => {
@@ -126,4 +126,97 @@ describe("setup reminder", () => {
     expect(warnSpy).not.toHaveBeenCalled();
 
   });
+});
+
+describe("commander errors", () => {
+  const originalArgv = process.argv.slice();
+  const originalExitCode = process.exitCode;
+  const originalIsTTY = process.stdout.isTTY;
+  let exitSpy: ReturnType<typeof vi.spyOn> | null = null;
+  let errorSpy: ReturnType<typeof vi.spyOn> | null = null;
+
+  afterEach(() => {
+    process.argv = originalArgv.slice();
+    process.exitCode = originalExitCode;
+    Object.defineProperty(process.stdout, "isTTY", {
+      value: originalIsTTY,
+      configurable: true,
+    });
+    if (exitSpy) {
+      exitSpy.mockRestore();
+      exitSpy = null;
+    }
+    if (errorSpy) {
+      errorSpy.mockRestore();
+      errorSpy = null;
+    }
+    vi.restoreAllMocks();
+  });
+
+  it("logs missing argument errors through the logger", async () => {
+    vi.resetModules();
+    Object.defineProperty(process.stdout, "isTTY", {
+      value: false,
+      configurable: true,
+    });
+
+    process.argv = ["node", "pwvm", "uninstall"];
+    process.exitCode = 0;
+
+    errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    exitSpy = vi.spyOn(process, "exit").mockImplementation((() => { }) as never);
+
+    await import("./index.js");
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(errorSpy).toHaveBeenCalled();
+    const message = String(errorSpy.mock.calls[0][0]);
+    expect(message).toContain("[ERROR]:");
+    expect(message).toContain('Missing required argument "version".');
+    expect(message).not.toContain("error:");
+    expect(process.exitCode).not.toBe(0);
+  });
+
+  it("does not log help output as an error", async () => {
+    vi.resetModules();
+    Object.defineProperty(process.stdout, "isTTY", {
+      value: false,
+      configurable: true,
+    });
+
+    process.argv = ["node", "pwvm", "help"];
+    process.exitCode = 0;
+
+    errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    exitSpy = vi.spyOn(process, "exit").mockImplementation((() => { }) as never);
+
+    await import("./index.js");
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+
+  it("prints version without logging an error", async () => {
+    vi.resetModules();
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    vi.spyOn(process, "exit").mockImplementation(() => {
+      throw new Error("process.exit");
+    });
+
+    process.argv = ["node", "pwvm", "--version"];
+
+    try {
+      await import("./index.js");
+    } catch {
+      // Commander may exit — ignore
+    }
+
+    await new Promise((resolve) => setImmediate(resolve));
+
+    // ✅ The ONLY thing that matters
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
 });
