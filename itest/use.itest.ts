@@ -5,7 +5,7 @@ import { execa } from "execa";
 import os from "node:os";
 
 // Integration test: optional and experimental; safe to remove without impact.
-describe.skip("pwvm use (integration)", () => {
+describe("pwvm use (integration)", () => {
   it("sets the active Playwright version", async () => {
     // Arrange: temp HOME
     const tempHome = await fs.mkdtemp(

@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 const execFileAsync = promisify(execFile);
 
 // Integration test: optional and experimental; safe to remove without impact.
-describe.skip("pwvm install (integration)", () => {
+describe("pwvm install (integration)", () => {
   it("installs a version without browsers", async () => {
     const tempHome = await fs.mkdtemp(path.join(os.tmpdir(), "pwvm-itest-"));
     const version = "1.42.0";
