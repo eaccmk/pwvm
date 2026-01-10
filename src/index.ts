@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import fs from "fs-extra";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { runCurrentCommand } from "./commands/current.js";
 import { runDoctorCommand } from "./commands/doctor.js";
@@ -9,10 +10,16 @@ import { runListCommand } from "./commands/list.js";
 import { runListRemoteCommand } from "./commands/listRemote.js";
 import { runPruneCommand } from "./commands/prune.js";
 import { runSetupCommand } from "./commands/setup.js";
+import { runUninstallCommand } from "./commands/uninstall.js";
 import { runUseCommand } from "./commands/use.js";
 import { getPwvmDir, getShimsDir } from "./core/paths.js";
 import { runPlaywrightShim } from "./core/shim.js";
 import { createLogger } from "./utils/logger.js";
+
+const require = createRequire(import.meta.url);
+const { version: pwvmVersion } = require("../package.json") as {
+  version: string;
+};
 
 const program = new Command();
 program.enablePositionalOptions();
@@ -41,8 +48,93 @@ const getShimArgs = (): string[] => {
 
 program
   .name("pwvm")
-  .description("Playwright Version Manager")
-  .version("0.0.1");
+  .description(`Playwright Version Manager (v${pwvmVersion})`)
+  .version(pwvmVersion, "-v, --version");
+
+program.configureOutput({
+  outputError: () => { },
+});
+
+program.exitOverride((err) => {
+  // Commander control-flow exits (help / version)
+  if (
+    err.code === "commander.helpDisplayed" ||
+    err.code === "commander.versionDisplayed" ||
+    err.code === "commander.help" ||
+    err.exitCode === 0
+  ) {
+    process.exitCode = err.exitCode || 0;
+    return;
+  }
+
+  let message = err.message;
+  if (message.startsWith("error: ")) {
+    message = message.slice("error: ".length);
+  }
+  message = message.replace(/'([^']+)'/g, "\"$1\"");
+  if (message.length > 0) {
+    message = `${message[0].toUpperCase()}${message.slice(1)}`;
+  }
+  if (!message.endsWith(".")) {
+    message = `${message}.`;
+  }
+
+  logger.error(message);
+  process.exitCode = err.exitCode || 1;
+});
+
+program.configureHelp({
+  formatHelp: (cmd, helper) => {
+    const help = Object.getPrototypeOf(helper).formatHelp.call(
+      helper,
+      cmd,
+      helper,
+    );
+    if (cmd !== program) {
+      return help;
+    }
+    const sections = help.split("\n\n");
+    if (sections.length < 2 || !sections[0].startsWith("Usage:")) {
+      return help;
+    }
+    let reordered = [sections[1], sections[0], ...sections.slice(2)].join("\n\n");
+    const installLine = "  install         Install a Playwright version";
+    const uninstallLine =
+      "  uninstall <version>     Uninstall a specific Playwright version";
+    if (!reordered.includes(uninstallLine) && reordered.includes(installLine)) {
+      reordered = reordered.replace(
+        `${installLine}\n`,
+        `${installLine}\n${uninstallLine}\n`,
+      );
+    }
+    const lines = reordered.split("\n");
+    let inCommands = false;
+    for (let i = 0; i < lines.length; i += 1) {
+      const line = lines[i];
+      if (line === "Commands:") {
+        inCommands = true;
+        continue;
+      }
+      if (inCommands) {
+        if (line.trim().length === 0) {
+          inCommands = false;
+          continue;
+        }
+        const match = /^  (.+?)( {2,})(\S.*)$/.exec(line);
+        if (match) {
+          const prefix = "pwvm ";
+          const term = match[1];
+          const spacing = match[2];
+          const desc = match[3];
+          const adjusted = Math.max(2, spacing.length - prefix.length);
+          lines[i] = `  ${prefix}${term}${" ".repeat(adjusted)}${desc}`;
+        }
+      }
+    }
+    reordered = lines.join("\n");
+    return `\n${reordered}`;
+  },
+});
 
 const shouldShowSetupNotice = async (): Promise<boolean> => {
   if (setupNoticeShown) {
@@ -118,6 +210,12 @@ program
   );
 
 program
+  .command("uninstall")
+  .description("Uninstall a specific Playwright version")
+  .argument("<version>")
+  .action((version: string) => invoke(runUninstallCommand, version));
+
+program
   .command("list")
   .description("List installed Playwright versions")
   .action(() => invoke(runListCommand));
@@ -130,7 +228,7 @@ program
 program
   .command("prune")
   .description("Remove unused Playwright versions")
-  .action(() => invoke(runPruneCommand));  
+  .action(() => invoke(runPruneCommand));
 
 program
   .command("setup")
@@ -166,7 +264,9 @@ program
     }
   });
 
-void program.parseAsync();
+program.parseAsync().catch(() => {
+  // All commander control-flow exits are handled by exitOverride.
+});
 
 type ShimErrorDetails = {
   message: string;
