@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "pwvm",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Playwright Version Manager",
   "license": "MIT",
   "type": "module",
@@ -12,6 +12,7 @@
   "files": [
     "dist",
     "README.md",
+    "wiki",
     "LICENSE"
   ],
   "scripts": {
@@ -25,8 +26,11 @@
     "playwright-version-manager",
     "playwright-cli",
     "version-manager",
+    "version",
+    "manager",
     "testing",
-    "e2e"
+    "ci",
+    "cli"
   ],
   "engines": {
     "node": ">=18"
