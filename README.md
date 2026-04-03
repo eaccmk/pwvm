@@ -1,6 +1,7 @@
 # pwvm
 
 ![CI](https://github.com/eaccmk/pwvm/actions/workflows/ci.yml/badge.svg)
+[![npm version](https://img.shields.io/npm/v/pwvm.svg)](https://www.npmjs.com/package/pwvm)
 
 ### **Playwright Version Manager**
 
@@ -53,7 +54,7 @@ playwright --version
 playwright test
 ```
 
-![pwvm commmands demo](./wiki/switching_playwright_vesions.gif)
+![pwvm commands demo](./wiki/switching_playwright_versions.gif)
 
 Pin versions per project with `.pwvmrc`:
 
@@ -61,14 +62,17 @@ Pin versions per project with `.pwvmrc`:
 1.57.0
 ```
 
-### Deterministic guarantees pwvm already provides
-•	Playwright installed by exact version (`playwright@x.y.z`)
-•	Versions stored in isolated directories (`~/.pwvm/versions/<version>`)
-•	Browser binaries scoped per Playwright version
-•	`.pwvmrc` pins version per repo
-•	No implicit upgrades (no latest unless explicitly requested)
+If a `.pwvmrc` file is present in your project root, running `pwvm use` will automatically detect and switch to that version.
 
-> [!NOTE] pwvm performs no background network activity and only installs software when explicitly requested.
+### Deterministic guarantees pwvm already provides
+- Playwright installed by exact version (`playwright@x.y.z`)
+- Versions stored in isolated directories (`~/.pwvm/versions/<version>`)
+- Browser binaries scoped per Playwright version
+- `.pwvmrc` pins version per repo
+- No implicit upgrades (no latest unless explicitly requested)
+
+> [!NOTE]
+> pwvm performs no background network activity and only installs software when explicitly requested.
 
 ---
 
@@ -76,7 +80,13 @@ Pin versions per project with `.pwvmrc`:
 
 `pwvm` works in GitHub Actions, Azure Pipelines, Bitbucket, and any CI where you control `PATH`.
 
-Install → setup → select version → run Playwright.
+Example usage in GitHub Actions:
+```yaml
+- run: npm install -g pwvm
+- run: pwvm setup
+- run: pwvm install 1.40.0 && pwvm use 1.40.0
+- run: npx playwright test
+```
 
 ### Dockerized
 
