@@ -1,6 +1,6 @@
 # pwvm
 
-![CI](https://github.com/eaccmk/pwvm/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/eaccmk/pwvm/actions/workflows/ci.yml/badge.svg) [![npm version](https://img.shields.io/npm/v/pwvm.svg)](https://www.npmjs.com/package/pwvm)
 
 ## **Playwright Version Manager**
 
@@ -254,9 +254,10 @@ docker run -it pwvm
 
 Then use commands like you would run on your local
 
-![commands in a Docker shell - interactive session ](../wiki/switching_playwright_vesions.gif)
+![commands in a Docker shell - interactive session ](../wiki/switching_playwright_versions.gif)
 
-> [!NOTE] pwvm performs no background network activity and only installs software when explicitly requested.
+> [!NOTE]
+> pwvm performs no background network activity and only installs software when explicitly requested.
 
 ### Usage in CI pipelines
 
