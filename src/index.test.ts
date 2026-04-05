@@ -1,5 +1,6 @@
 import path from "node:path";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { runCLI } from "./index.js";
 
 vi.mock("fs-extra", () => ({
   default: {
@@ -17,29 +18,15 @@ vi.mock("./commands/list.js", () => ({
 }));
 
 describe("setup reminder", () => {
-  const originalArgv = process.argv.slice();
-  const originalPath = process.env.PATH;
-  const originalExitCode = process.exitCode;
-  const originalIsTTY = process.stdout.isTTY;
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   afterEach(() => {
-    process.argv = originalArgv.slice();
-    process.env.PATH = originalPath;
-    process.exitCode = originalExitCode;
-    Object.defineProperty(process.stdout, "isTTY", {
-      value: originalIsTTY,
-      configurable: true,
-    });
     vi.restoreAllMocks();
   });
 
   it("shows reminder when setup is incomplete and still runs the command", async () => {
-    vi.resetModules();
-    Object.defineProperty(process.stdout, "isTTY", {
-      value: false,
-      configurable: true,
-    });
-
     const fsExtra = await import("fs-extra");
     const paths = await import("./core/paths.js");
     const listModule = await import("./commands/list.js");
@@ -55,8 +42,7 @@ describe("setup reminder", () => {
     getShimsDirMock.mockReturnValue(shimsDir);
     pathExistsMock.mockResolvedValue(false);
 
-    process.env.PATH = "/usr/bin";
-    process.argv = ["node", "pwvm", "list"];
+    vi.stubEnv("PATH", "/usr/bin");
 
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
     vi.spyOn(console, "log").mockImplementation(() => { });
@@ -69,7 +55,7 @@ describe("setup reminder", () => {
       resolveList?.();
     });
 
-    await import("./index.js");
+    await runCLI(["node", "pwvm", "list"]);
     await listDone;
 
     expect(runListCommandMock).toHaveBeenCalledTimes(1);
@@ -78,15 +64,10 @@ describe("setup reminder", () => {
     expect(warning).toContain("[WARN]:");
     expect(warning).toContain("pwvm is not set up yet.");
 
+    vi.unstubAllEnvs();
   });
 
   it("does not show reminder when setup is complete", async () => {
-    vi.resetModules();
-    Object.defineProperty(process.stdout, "isTTY", {
-      value: false,
-      configurable: true,
-    });
-
     const fsExtra = await import("fs-extra");
     const paths = await import("./core/paths.js");
     const listModule = await import("./commands/list.js");
@@ -106,8 +87,7 @@ describe("setup reminder", () => {
       return value === markerPath;
     });
 
-    process.env.PATH = "/usr/bin";
-    process.argv = ["node", "pwvm", "list"];
+    vi.stubEnv("PATH", "/usr/bin");
 
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
 
@@ -119,29 +99,36 @@ describe("setup reminder", () => {
       resolveList?.();
     });
 
-    await import("./index.js");
+    await runCLI(["node", "pwvm", "list"]);
     await listDone;
 
     expect(runListCommandMock).toHaveBeenCalledTimes(1);
     expect(warnSpy).not.toHaveBeenCalled();
 
+    vi.unstubAllEnvs();
   });
 });
 
 describe("commander errors", () => {
-  const originalArgv = process.argv.slice();
-  const originalExitCode = process.exitCode;
-  const originalIsTTY = process.stdout.isTTY;
   let exitSpy: ReturnType<typeof vi.spyOn> | null = null;
   let errorSpy: ReturnType<typeof vi.spyOn> | null = null;
+  let stdoutSpy: ReturnType<typeof vi.spyOn> | null = null;
+  let stderrSpy: ReturnType<typeof vi.spyOn> | null = null;
+  let logSpy: ReturnType<typeof vi.spyOn> | null = null;
+  let infoSpy: ReturnType<typeof vi.spyOn> | null = null;
+
+  beforeEach(() => {
+    stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation((() => true) as any);
+    stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation((() => true) as any);
+    logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+  });
 
   afterEach(() => {
-    process.argv = originalArgv.slice();
-    process.exitCode = originalExitCode;
-    Object.defineProperty(process.stdout, "isTTY", {
-      value: originalIsTTY,
-      configurable: true,
-    });
+    if (stdoutSpy) {
+      stdoutSpy.mockRestore();
+      stdoutSpy = null;
+    }
     if (exitSpy) {
       exitSpy.mockRestore();
       exitSpy = null;
@@ -154,20 +141,12 @@ describe("commander errors", () => {
   });
 
   it("logs missing argument errors through the logger", async () => {
-    vi.resetModules();
-    Object.defineProperty(process.stdout, "isTTY", {
-      value: false,
-      configurable: true,
-    });
-
-    process.argv = ["node", "pwvm", "uninstall"];
-    process.exitCode = 0;
-
     errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
     exitSpy = vi.spyOn(process, "exit").mockImplementation((() => { }) as never);
 
-    await import("./index.js");
-    await new Promise((resolve) => setImmediate(resolve));
+    process.exitCode = 0;
+
+    await runCLI(["node", "pwvm", "uninstall"]);
 
     expect(errorSpy).toHaveBeenCalled();
     const message = String(errorSpy.mock.calls[0][0]);
@@ -178,45 +157,22 @@ describe("commander errors", () => {
   });
 
   it("does not log help output as an error", async () => {
-    vi.resetModules();
-    Object.defineProperty(process.stdout, "isTTY", {
-      value: false,
-      configurable: true,
-    });
-
-    process.argv = ["node", "pwvm", "help"];
-    process.exitCode = 0;
-
     errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
     exitSpy = vi.spyOn(process, "exit").mockImplementation((() => { }) as never);
 
-    await import("./index.js");
-    await new Promise((resolve) => setImmediate(resolve));
+    await runCLI(["node", "pwvm", "help"]);
 
     expect(errorSpy).not.toHaveBeenCalled();
   });
 
-
   it("prints version without logging an error", async () => {
-    vi.resetModules();
-
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
-    vi.spyOn(process, "exit").mockImplementation(() => {
+    errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    exitSpy = vi.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("process.exit");
     });
 
-    process.argv = ["node", "pwvm", "--version"];
+    await runCLI(["node", "pwvm", "--version"]);
 
-    try {
-      await import("./index.js");
-    } catch {
-      // Commander may exit — ignore
-    }
-
-    await new Promise((resolve) => setImmediate(resolve));
-
-    // ✅ The ONLY thing that matters
     expect(errorSpy).not.toHaveBeenCalled();
   });
-
 });

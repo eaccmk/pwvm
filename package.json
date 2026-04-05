@@ -16,10 +16,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
     "dev": "ts-node src/index.ts",
-    "test": "vitest",
-    "test:e2e": "vitest -c itest.config.ts"
+    "test": "vitest src",
+    "test:e2e": "npm run build && vitest -c itest.config.ts"
   },
   "keywords": [
     "playwright",

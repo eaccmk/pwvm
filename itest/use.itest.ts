@@ -24,6 +24,7 @@ describe("pwvm use (integration)", () => {
         env: {
           ...process.env,
           HOME: tempHome,
+          NODE_ENV: "production",
           USERPROFILE: tempHome, // windows safety
         },
       });
