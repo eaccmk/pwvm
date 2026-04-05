@@ -1,0 +1,29 @@
+# Demo image for pwvm using a non-root runtime user end-to-end.
+FROM node:20-slim
+
+# Create the unprivileged user that will run the entire demo.
+RUN useradd --create-home --shell /bin/sh app
+# Keep both the npm global prefix and the demo workspace writable by the app user.
+RUN mkdir -p /home/app/.npm-global /demo \
+  && chown -R app:app /home/app /demo
+
+# Package produced by `scripts/docker-demo.mjs`.
+COPY .tmp/docker-demo/pwvm-demo.tgz /tmp/pwvm-demo.tgz
+# Demo entrypoint and smoke-test file copied into the image.
+COPY docker/demo/run-demo.sh /usr/local/bin/run-pwvm-demo
+COPY docker/demo/version.spec.js /demo/version.spec.js
+
+RUN chmod +x /usr/local/bin/run-pwvm-demo
+
+USER app
+ENV HOME=/home/app
+# Install global npm binaries into the unprivileged user's home directory.
+ENV NPM_CONFIG_PREFIX=/home/app/.npm-global
+ENV PATH=/home/app/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Install pwvm from the local packed tarball so the demo matches this repo's code.
+RUN npm install -g /tmp/pwvm-demo.tgz \
+  && true
+
+WORKDIR /demo
+CMD ["run-pwvm-demo"]
