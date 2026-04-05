@@ -26,17 +26,6 @@ program.enablePositionalOptions();
 const logger = createLogger();
 let setupNoticeShown = false;
 
-const invoke = <Args extends unknown[], Result>(
-  handler: (...args: Args) => Result,
-  ...args: Args
-): Result => {
-  const candidate = handler as { mockClear?: () => void };
-  if (typeof candidate.mockClear === "function") {
-    candidate.mockClear();
-  }
-  return handler(...args);
-};
-
 const getShimArgs = (): string[] => {
   const argv = process.argv;
   const shimIndex = argv.indexOf("_shim");
@@ -192,12 +181,12 @@ program.hook("preAction", async (thisCommand, actionCommand) => {
 program
   .command("current")
   .description("Show active Playwright version")
-  .action(() => invoke(runCurrentCommand));
+  .action(() => runCurrentCommand());
 
 program
   .command("doctor")
   .description("Check pwvm setup status")
-  .action(() => invoke(runDoctorCommand));
+  .action(() => runDoctorCommand());
 
 program
   .command("install")
@@ -206,40 +195,40 @@ program
   .option("--with-browsers", "Install Playwright browsers (default)")
   .option("--no-browsers", "Skip Playwright browser install")
   .action((version: string, options: { withBrowsers?: boolean; browsers?: boolean }) =>
-    invoke(runInstallCommand, version, options),
+    runInstallCommand(version, options),
   );
 
 program
   .command("uninstall")
   .description("Uninstall a specific Playwright version")
   .argument("<version>")
-  .action((version: string) => invoke(runUninstallCommand, version));
+  .action((version: string) => runUninstallCommand(version));
 
 program
   .command("list")
   .description("List installed Playwright versions")
-  .action(() => invoke(runListCommand));
+  .action(() => runListCommand());
 
 program
   .command("list-remote")
   .description("List available Playwright versions")
-  .action(() => invoke(runListRemoteCommand));
+  .action(() => runListRemoteCommand());
 
 program
   .command("prune")
   .description("Remove unused Playwright versions")
-  .action(() => invoke(runPruneCommand));
+  .action(() => runPruneCommand());
 
 program
   .command("setup")
   .description("Create shims and show PATH instructions")
-  .action(() => invoke(runSetupCommand));
+  .action(() => runSetupCommand());
 
 program
   .command("use")
   .description("Set active Playwright version")
-  .argument("<version>", "Playwright version to use")
-  .action((version: string) => invoke(runUseCommand, version));
+  .argument("[version]", "Playwright version to use")
+  .action((version?: string) => runUseCommand(version));
 
 program
   .command("_shim", { hidden: true })

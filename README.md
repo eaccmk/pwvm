@@ -64,6 +64,10 @@ Pin versions per project with `.pwvmrc`:
 
 If a `.pwvmrc` file is present in your project root, running `pwvm use` will automatically detect and switch to that version.
 
+```sh
+pwvm use
+```
+
 ### Deterministic guarantees pwvm already provides
 - Playwright installed by exact version (`playwright@x.y.z`)
 - Versions stored in isolated directories (`~/.pwvm/versions/<version>`)

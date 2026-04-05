@@ -1,6 +1,8 @@
+import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runUseCommand } from "./use.js";
+import { createFsMock, createTempPwvmHome } from "../test/utils.js";
 
 describe("runUseCommand", () => {
   const originalExitCode = process.exitCode;
@@ -44,5 +46,35 @@ describe("runUseCommand", () => {
     expect(infoMessage).toContain(`Run \`pwvm install ${version}\` first.`);
     expect(setActive).not.toHaveBeenCalled();
     infoSpy.mockRestore();
+  });
+
+  it("uses .pwvmrc when no version argument is provided", async () => {
+    const { homeDir, cleanup } = await createTempPwvmHome();
+    const version = "1.42.0";
+    const versionsDir = path.join(homeDir, ".pwvm", "versions");
+    const rcPath = path.join(homeDir, ".pwvmrc");
+    const fsMock = createFsMock(homeDir);
+    const setActive = vi.fn(async () => {});
+    const infoSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    try {
+      await fsMock.ensureDir(path.join(versionsDir, version));
+      await fsMock.writeFile(rcPath, `${version}\n`, "utf8");
+
+      await runUseCommand(undefined, {
+        setActive,
+        fs: fsMock,
+        setOptions: { homeDir, rcStartDir: homeDir },
+      });
+
+      expect(setActive).toHaveBeenCalledWith(
+        version,
+        expect.objectContaining({ homeDir, rcStartDir: homeDir }),
+      );
+      expect(String(infoSpy.mock.calls[0][0])).toContain("(from .pwvmrc)");
+    } finally {
+      infoSpy.mockRestore();
+      await cleanup();
+    }
   });
 });
