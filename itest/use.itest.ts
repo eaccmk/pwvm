@@ -18,22 +18,24 @@ describe("pwvm use (integration)", () => {
 
     await fs.mkdir(path.join(versionsDir, version), { recursive: true });
 
-    // Act: run pwvm use
-    await execa("node", ["dist/index.js", "use", version], {
-      env: {
-        ...process.env,
-        HOME: tempHome,
-        USERPROFILE: tempHome, // windows safety
-      },
-    });
+    try {
+      // Act: run pwvm use
+      await execa("node", ["dist/index.js", "use", version], {
+        env: {
+          ...process.env,
+          HOME: tempHome,
+          USERPROFILE: tempHome, // windows safety
+        },
+      });
 
-    // Assert: active version file written
-    const activeVersionFile = path.join(pwvmDir, "version");
-    const contents = await fs.readFile(activeVersionFile, "utf8");
+      // Assert: active version file written
+      const activeVersionFile = path.join(pwvmDir, "version");
+      const contents = await fs.readFile(activeVersionFile, "utf8");
 
-    expect(contents.trim()).toBe(version);
-
-    // Cleanup
-    await fs.rm(tempHome, { recursive: true, force: true });
+      expect(contents.trim()).toBe(version);
+    } finally {
+      // Cleanup
+      await fs.rm(tempHome, { recursive: true, force: true });
+    }
   });
 });
