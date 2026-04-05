@@ -264,9 +264,18 @@ program
     }
   });
 
-program.parseAsync().catch(() => {
-  // All commander control-flow exits are handled by exitOverride.
-});
+export const runCLI = async (args = process.argv) => {
+  setupNoticeShown = false;
+  try {
+    await program.parseAsync(args);
+  } catch {
+    // All commander control-flow exits are handled by exitOverride.
+  }
+};
+
+if (process.env.NODE_ENV !== "test") {
+  runCLI(process.argv);
+}
 
 type ShimErrorDetails = {
   message: string;

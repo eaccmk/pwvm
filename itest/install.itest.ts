@@ -32,7 +32,7 @@ describe("pwvm install (integration)", () => {
     } finally {
       await fs.rm(tempHome, { recursive: true, force: true });
     }
-  });
+  }, 60000);
 });
 
 const pathExists = async (target: string): Promise<boolean> => {
