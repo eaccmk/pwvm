@@ -1,5 +1,6 @@
 import { execa } from "execa";
 import fs from "fs-extra";
+import { mkdir as mkdirNative } from "node:fs/promises";
 import semver from "semver";
 import path from "node:path";
 import { installPlaywrightBrowsers } from "./browsers.js";
@@ -9,7 +10,7 @@ import {
   type GetInstalledVersionsOptions,
 } from "./versions.js";
 
-export type InstallFs = Pick<typeof fs, "ensureDir" | "pathExists" | "remove" | "writeFile">;
+export type InstallFs = Pick<typeof fs, "ensureDir" | "pathExists" | "remove" | "writeFile"> & { mkdir?: (path: string | import("fs").PathLike) => Promise<void> };
 
 export type InstallOptions = {
   homeDir?: string;
@@ -34,7 +35,7 @@ export const installPlaywrightVersion = async (
   version: string,
   options: InstallOptions = {},
 ): Promise<InstallResult> => {
-  if (!semver.valid(version)) { // This guarantees that if the user inputs anything other than a valid version number (like 1.57.0), the code stops immediately. #safety
+  if (!semver.valid(version)) {
     throw new Error(`Invalid Playwright version "${version}".`);
   }
 
@@ -45,12 +46,14 @@ export const installPlaywrightVersion = async (
   const installBrowsers = options.installBrowsers ?? installPlaywrightBrowsers;
   const versionsDir = options.versionsDir ?? resolveVersionsDir(options.homeDir);
   const targetDir = path.join(versionsDir, version);
+  const lockDir = `${targetDir}.installing`;
   const packageDir = path.join(targetDir, "node_modules", "playwright");
   const browsersDir = path.join(targetDir, "browsers");
 
   let packageExists = false;
   let browsersExists = false;
   let cleanupOnFailure = false;
+  let lockAcquired = false;
   const result: InstallResult = {
     packageInstalled: false,
     browsersInstalled: false,
@@ -59,9 +62,22 @@ export const installPlaywrightVersion = async (
   };
 
   try {
+    await fsImpl.ensureDir(versionsDir);
+    const mkdirToUse = (fsImpl as InstallFs).mkdir ?? mkdirNative;
+    try {
+      await mkdirToUse(lockDir);
+      lockAcquired = true;
+    } catch (error: any) {
+      if (error.code === "EEXIST") {
+        throw new Error(
+          `Playwright ${version} is already being installed by another process.`,
+        );
+      }
+      throw error;
+    }
+
     packageExists = await fsImpl.pathExists(packageDir);
     browsersExists = await fsImpl.pathExists(browsersDir);
-    cleanupOnFailure = !packageExists;
     result.packageAlreadyInstalled = packageExists;
     result.browsersAlreadyInstalled = browsersExists;
 
@@ -76,7 +92,14 @@ export const installPlaywrightVersion = async (
     }
 
     if (!packageExists) {
-      await fsImpl.ensureDir(targetDir);
+      try {
+        await mkdirToUse(targetDir);
+        cleanupOnFailure = true;
+      } catch (error: any) {
+        if (error.code !== "EEXIST") {
+          throw error;
+        }
+      }
 
       // Stop npm from climbing up the directory tree by dropping a dummy package.json
       await fsImpl.writeFile(
@@ -130,5 +153,13 @@ export const installPlaywrightVersion = async (
       }
     }
     throw error;
+  } finally {
+    if (lockAcquired) {
+      try {
+        await fsImpl.remove(lockDir);
+      } catch {
+        // Best-effort cleanup.
+      }
+    }
   }
 };

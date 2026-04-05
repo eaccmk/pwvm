@@ -128,4 +128,32 @@ describe("installPlaywrightVersion", () => {
       await cleanup();
     }
   });
+
+  it("fails fast when another install holds the lock", async () => {
+    const { homeDir, cleanup } = await createTempPwvmHome();
+    const execaMock = createExecaMock();
+
+    try {
+      const version = "4.5.6";
+      const versionsDir = path.join(homeDir, ".pwvm", "versions");
+      const fsMock = createFsMock(homeDir);
+
+      await fs.ensureDir(path.join(versionsDir, `${version}.installing`));
+
+      await expect(
+        installPlaywrightVersion(version, {
+          fs: fsMock,
+          execa: execaMock,
+          versionsDir,
+          withBrowsers: false,
+        }),
+      ).rejects.toThrow(
+        `Playwright ${version} is already being installed by another process.`,
+      );
+
+      expect(execaMock).not.toHaveBeenCalled();
+    } finally {
+      await cleanup();
+    }
+  });
 });

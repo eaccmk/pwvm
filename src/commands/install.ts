@@ -56,10 +56,10 @@ export const runInstallCommand = async (
     if (!result.packageInstalled && !result.browsersInstalled) {
       if (result.packageAlreadyInstalled && result.browsersAlreadyInstalled) {
         logger.info(
-          `Playwright ${version} is already installed (browsers already installed)`,
+          `Playwright ${resolvedVersion} is already installed (browsers already installed)`,
         );
       } else {
-        logger.info(`Playwright ${version} is already installed`);
+        logger.info(`Playwright ${resolvedVersion} is already installed`);
       }
       return;
     }

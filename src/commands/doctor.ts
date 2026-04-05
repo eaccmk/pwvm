@@ -37,6 +37,7 @@ export const runDoctorCommand = async (
   const envPath = deps.envPath ?? process.env.PATH ?? process.env.DOCKER_PATH ?? "";
 
   const shimPath = path.join(shimsDir, "playwright");
+  const shimPathCmd = path.join(shimsDir, "playwright.cmd");
 
   const useColor = process.stdout.isTTY === true;
   const withScope = (message: string): string =>
@@ -70,7 +71,9 @@ export const runDoctorCommand = async (
   }
 
   try {
-    shimExists = await fsImpl.pathExists(shimPath);
+    const shimExistsUnix = await fsImpl.pathExists(shimPath);
+    const shimExistsWin = await fsImpl.pathExists(shimPathCmd);
+    shimExists = shimExistsUnix || shimExistsWin;
   } catch {
     shimExists = false;
   }

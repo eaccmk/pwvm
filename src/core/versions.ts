@@ -52,22 +52,18 @@ export const getInstalledVersions = async (
   const fsImpl = options.fs ?? fs;
   const versionsDir = resolveVersionsDir(options);
 
-  try {
-    const exists = await fsImpl.pathExists(versionsDir);
-    if (!exists) {
-      return [];
-    }
-
-    const entries = await fsImpl.readdir(versionsDir, { withFileTypes: true });
-    const versions = entries
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name)
-      .filter((version) => semver.valid(version) !== null);
-
-    return versions.sort((a, b) => semver.compare(a, b));
-  } catch {
+  const exists = await fsImpl.pathExists(versionsDir);
+  if (!exists) {
     return [];
   }
+
+  const entries = await fsImpl.readdir(versionsDir, { withFileTypes: true });
+  const versions = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((version) => semver.valid(version) !== null);
+
+  return versions.sort((a, b) => semver.compare(a, b));
 };
 
 export const getGlobalActiveVersion = async (
@@ -76,18 +72,14 @@ export const getGlobalActiveVersion = async (
   const fsImpl = options.fs ?? fs;
   const activeVersionFile = resolveActiveVersionFile(options);
 
-  try {
-    const exists = await fsImpl.pathExists(activeVersionFile);
-    if (!exists) {
-      return null;
-    }
-
-    const contents = await fsImpl.readFile(activeVersionFile, "utf8");
-    const trimmed = contents.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  } catch {
+  const exists = await fsImpl.pathExists(activeVersionFile);
+  if (!exists) {
     return null;
   }
+
+  const contents = await fsImpl.readFile(activeVersionFile, "utf8");
+  const trimmed = contents.trim();
+  return trimmed.length > 0 ? trimmed : null;
 };
 
 export const getResolvedActiveVersion = async (
@@ -96,20 +88,16 @@ export const getResolvedActiveVersion = async (
   const fsImpl = options.fs ?? fs;
   const resolveRc = options.resolveRc ?? resolveRcPath;
 
-  try {
-    const rcPath = resolveRc({
-      startDir: options.rcStartDir,
-      rcFileName: options.rcFileName,
-      fs: fsImpl,
-    });
+  const rcPath = resolveRc({
+    startDir: options.rcStartDir,
+    rcFileName: options.rcFileName,
+    fs: fsImpl,
+  });
 
-    if (rcPath) {
-      const contents = await fsImpl.readFile(rcPath, "utf8");
-      const trimmed = contents.trim();
-      return trimmed.length > 0 ? trimmed : null;
-    }
-  } catch {
-    return null;
+  if (rcPath) {
+    const contents = await fsImpl.readFile(rcPath, "utf8");
+    const trimmed = contents.trim();
+    return trimmed.length > 0 ? trimmed : null;
   }
 
   return getGlobalActiveVersion(options);

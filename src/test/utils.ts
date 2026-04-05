@@ -11,6 +11,7 @@ export type ScopedFs = Pick<
   | "readFile"
   | "writeFile"
   | "ensureDir"
+  | "mkdir"
   | "remove"
   | "existsSync"
   | "statSync"
@@ -71,6 +72,7 @@ export const createFsMock = (rootDir: string): ScopedFs => {
       return fs.writeFile(resolveWithinRoot(target), data, resolved);
     },
     ensureDir: (target: PathLike) => fs.ensureDir(resolveWithinRoot(target)),
+    mkdir: (target: PathLike) => fs.mkdir(resolveWithinRoot(target)),
     remove: (target: PathLike) => fs.remove(resolveWithinRoot(target)),
     existsSync: (target: PathLike) =>
       fs.existsSync(resolveWithinRoot(target)),

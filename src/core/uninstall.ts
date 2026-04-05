@@ -3,11 +3,11 @@ import type { PathLike } from "node:fs";
 import path from "node:path";
 import semver from "semver";
 import { getVersionsDir } from "./paths.js";
-import { getGlobalActiveVersion, type VersionsFs } from "./versions.js";
+import { getResolvedActiveVersion, type GetResolvedActiveVersionOptions, type VersionsFs } from "./versions.js";
 
 type RemoveFn = (path: PathLike) => Promise<void>;
 
-export type UninstallFs = VersionsFs & { remove: RemoveFn };
+export type UninstallFs = VersionsFs & { remove: RemoveFn; rename?: (oldPath: import("fs").PathLike, newPath: import("fs").PathLike) => Promise<void> };
 
 export type UninstallOptions = {
   fs?: UninstallFs;
@@ -15,6 +15,7 @@ export type UninstallOptions = {
   versionsDir?: string;
   activeVersionFile?: string;
   getVersionsDir?: typeof getVersionsDir;
+  activeOptions?: GetResolvedActiveVersionOptions;
 };
 
 export const uninstallPlaywrightVersion = async (
@@ -25,10 +26,11 @@ export const uninstallPlaywrightVersion = async (
     throw new Error(`Invalid Playwright version "${version}".`);
   }
   const fsImpl = options.fs ?? fs;
-  const activeVersion = await getGlobalActiveVersion({
+  const activeVersion = await getResolvedActiveVersion({
     homeDir: options.homeDir,
     activeVersionFile: options.activeVersionFile,
     fs: fsImpl,
+    ...options.activeOptions,
   });
   if (activeVersion === version) {
     throw new Error(`Playwright version "${version}" is currently active.`);
@@ -36,9 +38,15 @@ export const uninstallPlaywrightVersion = async (
   const resolveVersionsDir = options.getVersionsDir ?? getVersionsDir;
   const versionsDir = options.versionsDir ?? resolveVersionsDir(options.homeDir);
   const targetDir = path.join(versionsDir, version);
-  const exists = await fsImpl.pathExists(targetDir);
-  if (!exists) {
-    throw new Error(`Playwright version "${version}" is not installed.`);
+  const tmpDir = `${targetDir}.removing-${Date.now()}`;
+  try {
+    const renameToUse = (fsImpl as any).rename ?? ((fs as any).rename as (oldPath: import("fs").PathLike, newPath: import("fs").PathLike) => Promise<void>);
+    await renameToUse(targetDir, tmpDir);
+  } catch (error: any) {
+    if (error.code === "ENOENT") {
+      throw new Error(`Playwright version "${version}" is not installed.`);
+    }
+    throw error;
   }
-  await fsImpl.remove(targetDir);
+  await fsImpl.remove(tmpDir);
 };

@@ -13,7 +13,7 @@ import {
 
 type RemoveFn = (path: PathLike) => Promise<void>;
 
-export type PruneFs = VersionsFs & { remove: RemoveFn };
+export type PruneFs = VersionsFs & { remove: RemoveFn; rename?: (oldPath: import("fs").PathLike, newPath: import("fs").PathLike) => Promise<void> };
 
 export type PruneOptions = VersionPathOptions & {
   fs?: PruneFs;
@@ -90,11 +90,10 @@ export const pruneVersions = async (
     }
     const targetDir = path.join(versionsDir, version);
     try {
-      const exists = await fsImpl.pathExists(targetDir);
-      if (!exists) {
-        continue;
-      }
-      await fsImpl.remove(targetDir);
+      const tmpDir = `${targetDir}.removing-${Date.now()}`;
+      const renameToUse = (fsImpl as any).rename ?? ((fs as any).rename as (oldPath: import("fs").PathLike, newPath: import("fs").PathLike) => Promise<void>);
+      await renameToUse(targetDir, tmpDir);
+      await fsImpl.remove(tmpDir);
       removed.push(version);
     } catch {
       continue;
