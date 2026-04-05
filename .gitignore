@@ -11,6 +11,7 @@ node_modules/
 
 # Local pwvm state (never commit)
 .pwvm/
+.tmp/
 
 # Local scripts (developer-only)
 scripts/*.*
