@@ -89,12 +89,23 @@ Example usage in GitHub Actions:
 - run: npm install -g pwvm
 - run: pwvm setup
 - run: pwvm install 1.40.0 && pwvm use 1.40.0
-- run: npx playwright test
+- run: playwright test
 ```
 
 ### Dockerized
 
-`pwvm` works seamlessly in Docker containers or local development.
+`pwvm` can also be validated and demoed in Docker without changing the npm package footprint.
+
+Why Docker is useful here:
+
+- cache multiple Playwright versions in one isolated environment
+- switch versions quickly with `pwvm use`
+- prove that plain `playwright` commands resolve through pwvm naturally
+- keep the host machine clean while testing or demoing version changes
+
+The repo includes a non-root Docker demo that installs multiple Playwright versions, switches between them, runs plain `playwright test`, prunes old versions, and removes pwvm cleanly at the end.
+
+See the full Docker guide: [docker/README.md](./docker/README.md)
 
 ---
 

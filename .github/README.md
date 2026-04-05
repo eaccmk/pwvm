@@ -12,7 +12,7 @@ An open-source **Playwright Version Manager (pwvm)**.
 
 ---
 
-## What pwvm is ?
+## What is pwvm?
 
 `pwvm` or **Playwright Version Manager** lets you *install, manage, and switch between multiple Playwright versions* with a single command — similar to how `nvm` works for Node.js.
 
@@ -56,7 +56,7 @@ pwvm --version
 pwvm setup
 ```
 
-This prints the PATH export needed for Playwright shims.
+This creates the Playwright shims and prints the PATH export needed to use them.
 
 > [!NOTE]  
 > **What are shims?** <br>
@@ -80,7 +80,7 @@ flowchart TB
   end
  subgraph CIEnv["CI Environment"]
         CI["CI Runner"]
-        CI_CMD["pwvm exec playwright test"]
+        CI_CMD["playwright test"]
         CI_Tests["playwright test (CI)"]
   end
     User["User runs pwvm command"] --> Cmd["pwvm CLI"]
@@ -149,7 +149,6 @@ flowchart TB
     L_PlaywrightCLI_Tests_0@{ animation: fast } 
     L_RC_Active_0@{ animation: slow } 
     L_CI_CMD_Active_0@{ curve: natural, animation: slow } 
-    L_CI_CMD_Shims_0@{ curve: natural, animation: slow } 
     L_Shims_CI_Tests_0@{ animation: slow }
 ```
 
@@ -168,6 +167,9 @@ pwvm install 1.57.0 --no-browsers
 # Set the active Playwright version globally
 pwvm use 1.57.0
 
+# Or use the version from .pwvmrc in the current project
+pwvm use
+
 # Show the currently active version
 pwvm current
 
@@ -181,7 +183,7 @@ pwvm doctor
 After setup, use Playwright normally:
 
 ```sh
-# VYou can verify the actual Playwright version in use currently
+# You can verify the actual Playwright version currently in use
 playwright --version # or playwright -V
 
 # Run test as usual (can be your own commands with multiple params)
@@ -201,63 +203,83 @@ Create `.pwvmrc` in your project root:
 When present:
 
 - `.pwvmrc` overrides the global version
-- No need to run `pwvm use` inside that project
+- Running `playwright ...` in that project uses the pinned version automatically
+- Running `pwvm use` with no version will select the version from `.pwvmrc`
 - Ideal for CI, monorepos, and shared repositories
 
 ## Running pwvm in Docker
 
-You can use `pwvm` in Docker to manage and test multiple Playwright versions.
+`pwvm` works in Docker, and you can also verify that locally with the repo's Docker demo flow or use it for working demos.
+
+Docker is especially useful when you want to:
+
+- cache multiple Playwright versions in one controlled environment
+- switch versions quickly with `pwvm use`
+- prove that plain `playwright` commands resolve through pwvm naturally
+- validate pwvm without mutating the host machine
+
+This repo includes a non-root Docker demo flow for local verification and live demos.
 
 #### Example Dockerfile
 
 ```Dockerfile
 FROM node:20-slim
 
-# Install pwvm globally
+# Create a non-root user for the demo/runtime container
+RUN useradd --create-home --shell /bin/sh app
+
+# Keep the npm global prefix and working directory writable by that user
+RUN mkdir -p /home/app/.npm-global /app \
+  && chown -R app:app /home/app /app
+
+# Install pwvm globally into the non-root user's home directory
+USER app
+ENV HOME=/home/app
+ENV NPM_CONFIG_PREFIX=/home/app/.npm-global
+ENV PATH=/home/app/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 RUN npm install -g pwvm
 
-# Root default
-ENV PATH="/root/.pwvm/shims:${PATH}"
-
+# App workspace
 WORKDIR /app
 COPY . .
 
-# Uncomment to install multiple Playwright versions using RUN commands
+# Create pwvm shims for the current user
+RUN pwvm setup
+
+# Make the shim path active for later commands in the image
+ENV PATH=/home/app/.pwvm/shims:/home/app/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Preinstall versions you want cached in the image
+RUN pwvm install 1.40.0 --no-browsers
 RUN pwvm install 1.57.0 --no-browsers
-# RUN pwvm install 1.40.0
-# RUN pwvm install latest
+
+# Pick the default active version for plain `playwright` commands
+RUN pwvm use 1.57.0
 
 CMD ["sh"]
 ```
 
-#### Build and run
+This repo includes a non-root Docker demo flow that:
+
+- builds the current repo into a local package tarball
+- installs that build into a disposable Docker image
+- installs multiple Playwright versions
+- switches between them with `pwvm use`
+- shows the active version during plain `playwright test`
+- prunes older versions and removes pwvm cleanly at the end
+
+#### Verify locally with the repo demo
 
 ```sh
-# Build the Docker image
-docker build -t pwvm .
-
-# Run tests with a specific version
-docker pwvm use 1.57.0
+node scripts/docker-demo.mjs
 ```
 
-#### Verify installed versions
+That local demo is meant to prove the Docker workflow end-to-end with this repo's current code.
 
-```sh
-# List all installed versions
-docker run pwvm list
-```
-
-#### docker interactive mode (shell)
-```sh
-docker run -it pwvm
-```
-
-Then use commands like you would run on your local
-
-![commands in a Docker shell - interactive session ](../wiki/switching_playwright_versions.gif)
+For the full Docker walkthrough, benefits, test flow, and demo details, see [docker/README.md](../docker/README.md).
 
 > [!NOTE]
-> pwvm performs no background network activity and only installs software when explicitly requested.
+> The Docker demo is repo tooling only. It does not change the npm package publish footprint.
 
 ### Usage in CI pipelines
 
